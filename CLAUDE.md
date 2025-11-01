@@ -7,16 +7,18 @@ work on any system with only uv installed.
 
 # Running bash scripts
 
-The human prefers to see what the scripts are doing. You are running in tmux,
-so use that to show the scirpt outputs - open a pane to the right from yours,
-send scirpts to run there, possibly even long running scripts.
+The human prefers to see what the scripts are doing. 
 
 If you create any script, include sufficient amount of console printing so that
 it is always clear what is going on. Especially for long running tasks. The
 nicer the better.
 
-Try not to use background bash tasks as their output is not shown well. You can
-always tail the tmux panes if you need the output for further thinking.
+Try not to use background bash tasks as their output is not shown well.
 
+You can use new console windows with tmux inside so that you can get to the
+output of the script it there are any errors printed there.
+
+If you are openning a new terminal window, do not use xterm, but rather `zutty
+-font firacode -fontize 19` as this is what the human is used to.
 
 
