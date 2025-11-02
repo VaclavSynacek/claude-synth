@@ -275,20 +275,28 @@ class AcidLooperCurses:
         try:
             self.stdscr.clear()
             max_y, max_x = self.stdscr.getmaxyx()
+            width = max_x - 1  # Leave 1 char margin
             row = 0
 
             # Header
-            self.stdscr.addstr(row, 0, "╔" + "═" * 78 + "╗", curses.color_pair(1) | curses.A_BOLD)
+            header_text = "ROLAND T-8 ACID LOOPER - DYNAMIC EDITION"
+            padding = (width - len(header_text) - 2) // 2
+            self.stdscr.addstr(row, 0, "╔" + "═" * (width - 2) + "╗", curses.color_pair(1) | curses.A_BOLD)
             row += 1
-            self.stdscr.addstr(row, 0, "║" + " " * 15 + "ROLAND T-8 ACID LOOPER - DYNAMIC EDITION" + " " * 23 + "║", curses.color_pair(1) | curses.A_BOLD)
+            self.stdscr.addstr(row, 0, "║" + " " * padding + header_text + " " * (width - len(header_text) - padding - 2) + "║", curses.color_pair(1) | curses.A_BOLD)
             row += 1
-            self.stdscr.addstr(row, 0, "╚" + "═" * 78 + "╝", curses.color_pair(1) | curses.A_BOLD)
+            self.stdscr.addstr(row, 0, "╚" + "═" * (width - 2) + "╝", curses.color_pair(1) | curses.A_BOLD)
             row += 2
 
             # Available Patches
-            self.stdscr.addstr(row, 0, "┌─── Available Patches " + "─" * 56 + "┐")
+            title = "─── Available Patches "
+            self.stdscr.addstr(row, 0, "┌" + title + "─" * (width - len(title) - 2) + "┐")
             row += 1
             patches = self.patch_loader.get_all_patches()
+
+            # Calculate available space for patch info
+            name_width = min(30, (width - 20) // 2)
+            desc_width = width - name_width - 20
 
             for key, patch in patches:
                 if row >= max_y - 10:  # Leave room for rest of UI
@@ -305,31 +313,44 @@ class AcidLooperCurses:
                     marker = " "
                     color = 0
 
-                line = f"│ {marker} [{key}]  {patch['name']:<25s} {patch['description'][:30]:<30s} │"
+                # Truncate if needed
+                name = patch['name'][:name_width].ljust(name_width)
+                desc = patch['description'][:desc_width].ljust(desc_width)
+
+                line = f"│ {marker} [{key}]  {name} {desc} │"
+                if len(line) > width:
+                    line = line[:width-1] + "│"
+                elif len(line) < width:
+                    line = line[:-1].ljust(width-1) + "│"
+
                 self.stdscr.addstr(row, 0, line, color)
                 row += 1
-            self.stdscr.addstr(row, 0, "└" + "─" * 78 + "┘")
+            self.stdscr.addstr(row, 0, "└" + "─" * (width - 2) + "┘")
             row += 2
 
             # Controls
-            self.stdscr.addstr(row, 0, "┌─── Controls " + "─" * 65 + "┐")
+            title = "─── Controls "
+            self.stdscr.addstr(row, 0, "┌" + title + "─" * (width - len(title) - 2) + "┐")
             row += 1
-            self.stdscr.addstr(row, 0, "│  [q-m]  Switch patch  │  [↑/↓]  Tempo  │  [ESC]  Quit" + " " * 24 + "│")
+            controls_text = "[q-m] Switch  │  [↑/↓] Tempo  │  [ESC] Quit"
+            self.stdscr.addstr(row, 0, "│  " + controls_text.ljust(width - 4) + "│")
             row += 1
-            self.stdscr.addstr(row, 0, "└" + "─" * 78 + "┘")
+            self.stdscr.addstr(row, 0, "└" + "─" * (width - 2) + "┘")
             row += 2
 
             # Now Playing
-            self.stdscr.addstr(row, 0, "┌─── Now Playing " + "─" * 62 + "┐", curses.color_pair(3))
+            title = "─── Now Playing "
+            self.stdscr.addstr(row, 0, "┌" + title + "─" * (width - len(title) - 2) + "┐", curses.color_pair(3))
             row += 1
-            self.stdscr.addstr(row, 0, "│ " + " " * 77 + "│")
+            self.stdscr.addstr(row, 0, "│ " + " " * (width - 3) + "│")
             self.status_row = row  # Save this row for status updates
             row += 1
-            self.stdscr.addstr(row, 0, "└" + "─" * 78 + "┘", curses.color_pair(3))
+            self.stdscr.addstr(row, 0, "└" + "─" * (width - 2) + "┘", curses.color_pair(3))
             row += 2
 
             # Footer
-            self.stdscr.addstr(row, 0, f"BPM: {self.tempo.bpm:3d}  │  Patch: {current_patch['name']}", curses.color_pair(2))
+            footer = f"BPM: {self.tempo.bpm:3d}  │  Patch: {current_patch['name']}"
+            self.stdscr.addstr(row, 0, footer[:width], curses.color_pair(2))
 
             self.stdscr.refresh()
         except curses.error:
@@ -338,8 +359,13 @@ class AcidLooperCurses:
 
     def update_status_line(self, text: str):
         """Update just the status line"""
-        self.stdscr.addstr(self.status_row, 2, text[:76].ljust(76), curses.color_pair(3) | curses.A_BOLD)
-        self.stdscr.refresh()
+        try:
+            max_y, max_x = self.stdscr.getmaxyx()
+            width = max_x - 5  # Account for borders
+            self.stdscr.addstr(self.status_row, 2, text[:width].ljust(width), curses.color_pair(3) | curses.A_BOLD)
+            self.stdscr.refresh()
+        except curses.error:
+            pass
 
     def play_pattern_loop(self, patch: Dict, current_patch: Dict):
         """Play one complete loop of the pattern"""
@@ -360,7 +386,8 @@ class AcidLooperCurses:
                 self.running = False
                 return False
             elif key == curses.KEY_RESIZE:
-                # Terminal was resized, trigger redraw
+                # Terminal was resized - just flag for redraw
+                # Don't clear/refresh here, let draw_ui handle it
                 self.needs_full_redraw = True
             elif key == curses.KEY_UP:
                 self.tempo.increase()
