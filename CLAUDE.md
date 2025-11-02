@@ -7,11 +7,11 @@ work on any system with only uv installed.
 
 # Running bash scripts
 
-The human prefers to see what the scripts are doing. 
+The human prefers to see what the scripts are doing.
 
-If you create any script, include sufficient amount of console printing so that
-it is always clear what is going on. Especially for long running tasks. The
-nicer the better.
+If you create and run any script, include sufficient amount of console printing
+so that it is always clear what is going on. Especially for long running tasks.
+The nicer the better.
 
 Try not to use background bash tasks as their output is not shown well.
 
