@@ -393,15 +393,20 @@ class AcidLooperCurses:
                 beats_to_change = i - current_step
                 return current_section, next_section, beats_to_change
 
-        # No change found, return current section
-        return current_section, current_section, 0
+        # No change found in this loop - get first section for wraparound
+        first_label = bass_pattern[0][2]
+        first_section = self._extract_section_name(first_label)
+        beats_to_change = len(bass_pattern) - current_step
+        return current_section, first_section, beats_to_change
 
     def update_now_playing(self, bass_note: int, bass_vel: int, drum_hits: list,
-                          step_idx: int, total_steps: int, bass_pattern: list):
+                          step_idx: int, total_steps: int, bass_pattern: list,
+                          next_patch=None, next_patch_key=None):
         """Update the entire Now Playing section"""
         try:
             max_y, max_x = self.stdscr.getmaxyx()
             width = max_x - 5  # Account for borders
+            slider_width = 24
 
             # Calculate beat position (assume 16th notes, 4 beats per bar)
             beat_num = (step_idx // 4) + 1
@@ -411,19 +416,28 @@ class AcidLooperCurses:
             # Get section info
             current_section, next_section, beats_away = self._find_next_section_change(bass_pattern, step_idx)
 
-            # Header line 1: Beat and Step
-            header1 = f"Beat: {beat_pos:5s}  │  Step: {step_idx+1:2d}/{total_steps:2d} ({int((step_idx+1)/total_steps*100):3d}%)"
+            # Header line 1: Beat and Step with progress slider
+            step_progress = self._draw_velocity_slider(step_idx + 1, total_steps, slider_width)
+            header1 = f"Beat: {beat_pos:5s}  │  {step_progress}  {step_idx+1:2d}/{total_steps:2d} ({int((step_idx+1)/total_steps*100):3d}%)"
             self.stdscr.addstr(self.header1_row, 2, header1[:width].ljust(width), curses.color_pair(3))
 
-            # Header line 2: Section with visual progress
-            if beats_away > 0:
-                # Draw progress bar showing countdown
-                bar_width = 24
-                progress = max(0, min(bar_width, int((beats_away / 32) * bar_width)))  # Scale to 32 beats
-                progress_bar = "█" * (bar_width - progress) + "░" * progress
-                section_text = f"Section: {current_section:6s}  │  {progress_bar}  {beats_away:2d} beats to {next_section}"
+            # Header line 2: Section with visual countdown (names at end for alignment)
+            # Calculate beats to end of loop
+            beats_to_loop_end = total_steps - step_idx
+
+            # Draw progress bar showing countdown (fills as we approach change)
+            if next_patch is not None:
+                # Patch change queued - show countdown to loop end
+                progress_value = int((1.0 - (beats_to_loop_end / total_steps)) * 127)
+                section_progress = self._draw_velocity_slider(progress_value, 127, slider_width)
+                next_patch_name = next_patch.get('name', 'Unknown')[:15]
+                section_text = f"{section_progress}  {beats_to_loop_end:2d} beats → PATCH CHANGE: {next_patch_name}"
             else:
-                section_text = f"Section: {current_section:6s}"
+                # Normal section countdown
+                progress_value = int((1.0 - (beats_away / max(beats_away + 1, total_steps))) * 127)
+                section_progress = self._draw_velocity_slider(progress_value, 127, slider_width)
+                section_text = f"{section_progress}  {beats_away:2d} beats → {current_section} to {next_section}"
+
             self.stdscr.addstr(self.header2_row, 2, section_text[:width].ljust(width), curses.color_pair(3))
 
             # Prepare drum velocities (indexed by drum type)
@@ -459,7 +473,7 @@ class AcidLooperCurses:
             ]
 
             for idx, (name, note_name, velocity) in enumerate(instruments):
-                slider = self._draw_velocity_slider(velocity)
+                slider = self._draw_velocity_slider(velocity, 127, slider_width)
                 accent = "  ▲" if velocity > 110 else ""
 
                 if note_name:  # BASS has note name
@@ -498,10 +512,10 @@ class AcidLooperCurses:
                 self.needs_full_redraw = True
             elif key == curses.KEY_UP:
                 self.tempo.increase()
-                # Tempo will be shown in footer, just trigger redraw on next loop
+                self.needs_full_redraw = True
             elif key == curses.KEY_DOWN:
                 self.tempo.decrease()
-                # Tempo will be shown in footer, just trigger redraw on next loop
+                self.needs_full_redraw = True
             elif key != -1:  # Some other key was pressed
                 char = chr(key).lower()
                 if char in PATCH_KEYS:
@@ -519,7 +533,8 @@ class AcidLooperCurses:
                 drum_hits, _ = drum_pattern[step_idx]
 
             # Update the Now Playing display
-            self.update_now_playing(note, velocity, drum_hits, step_idx, total_steps, bass_pattern)
+            self.update_now_playing(note, velocity, drum_hits, step_idx, total_steps, bass_pattern,
+                                   self.next_patch, self.next_patch_key)
 
             # Play drums
             if step_idx < len(drum_pattern):
