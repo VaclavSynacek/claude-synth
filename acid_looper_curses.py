@@ -342,9 +342,21 @@ class AcidLooperCurses:
             title = "─── Now Playing "
             self.stdscr.addstr(row, 0, "┌" + title + "─" * (width - len(title) - 2) + "┐", curses.color_pair(3))
             row += 1
+            # Header line 1: Beat and step info
             self.stdscr.addstr(row, 0, "│ " + " " * (width - 3) + "│")
-            self.status_row = row  # Save this row for status updates
+            self.header1_row = row
             row += 1
+            # Header line 2: Section info
+            self.stdscr.addstr(row, 0, "│ " + " " * (width - 3) + "│")
+            self.header2_row = row
+            row += 1
+            self.stdscr.addstr(row, 0, "├" + "─" * (width - 2) + "┤", curses.color_pair(3))
+            row += 1
+            # 7 instrument rows
+            for i in range(7):
+                self.stdscr.addstr(row, 0, "│ " + " " * (width - 3) + "│")
+                row += 1
+            self.instrument_start_row = self.header2_row + 2
             self.stdscr.addstr(row, 0, "└" + "─" * (width - 2) + "┘", curses.color_pair(3))
             row += 2
 
@@ -357,12 +369,107 @@ class AcidLooperCurses:
             # Ignore errors when terminal is too small
             pass
 
-    def update_status_line(self, text: str):
-        """Update just the status line"""
+    def _draw_velocity_slider(self, velocity: int, max_vel: int = 127, width: int = 24) -> str:
+        """Draw a velocity slider bar"""
+        filled = int((velocity / max_vel) * width)
+        return "[" + "█" * filled + " " * (width - filled) + "]"
+
+    def _extract_section_name(self, label: str) -> str:
+        """Extract section prefix from label like 'intro_1' -> 'INTRO'"""
+        if '_' in label:
+            return label.split('_')[0].upper()
+        return "MAIN"
+
+    def _find_next_section_change(self, bass_pattern: list, current_step: int) -> tuple:
+        """Find how many beats until next section change"""
+        current_label = bass_pattern[current_step][2]
+        current_section = self._extract_section_name(current_label)
+
+        # Look ahead for section change
+        for i in range(current_step + 1, len(bass_pattern)):
+            next_label = bass_pattern[i][2]
+            next_section = self._extract_section_name(next_label)
+            if next_section != current_section:
+                beats_to_change = i - current_step
+                return current_section, next_section, beats_to_change
+
+        # No change found, return current section
+        return current_section, current_section, 0
+
+    def update_now_playing(self, bass_note: int, bass_vel: int, drum_hits: list,
+                          step_idx: int, total_steps: int, bass_pattern: list):
+        """Update the entire Now Playing section"""
         try:
             max_y, max_x = self.stdscr.getmaxyx()
             width = max_x - 5  # Account for borders
-            self.stdscr.addstr(self.status_row, 2, text[:width].ljust(width), curses.color_pair(3) | curses.A_BOLD)
+
+            # Calculate beat position (assume 16th notes, 4 beats per bar)
+            beat_num = (step_idx // 4) + 1
+            sixteenth = (step_idx % 4) + 1
+            beat_pos = f"{beat_num}.{sixteenth}"
+
+            # Get section info
+            current_section, next_section, beats_away = self._find_next_section_change(bass_pattern, step_idx)
+
+            # Header line 1: Beat and Step
+            header1 = f"Beat: {beat_pos:5s}  │  Step: {step_idx+1:2d}/{total_steps:2d} ({int((step_idx+1)/total_steps*100):3d}%)"
+            self.stdscr.addstr(self.header1_row, 2, header1[:width].ljust(width), curses.color_pair(3))
+
+            # Header line 2: Section with visual progress
+            if beats_away > 0:
+                # Draw progress bar showing countdown
+                bar_width = 24
+                progress = max(0, min(bar_width, int((beats_away / 32) * bar_width)))  # Scale to 32 beats
+                progress_bar = "█" * (bar_width - progress) + "░" * progress
+                section_text = f"Section: {current_section:6s}  │  {progress_bar}  {beats_away:2d} beats to {next_section}"
+            else:
+                section_text = f"Section: {current_section:6s}"
+            self.stdscr.addstr(self.header2_row, 2, section_text[:width].ljust(width), curses.color_pair(3))
+
+            # Prepare drum velocities (indexed by drum type)
+            drum_vels = {
+                'kick': 0, 'snare': 0, 'clap': 0, 'tom': 0,
+                'closed_hh': 0, 'open_hh': 0
+            }
+            for drum_note, drum_vel in drum_hits:
+                if drum_note == DrumPatternGenerator.DRUMS['kick']:
+                    drum_vels['kick'] = drum_vel
+                elif drum_note == DrumPatternGenerator.DRUMS['snare']:
+                    drum_vels['snare'] = drum_vel
+                elif drum_note == DrumPatternGenerator.DRUMS['clap']:
+                    drum_vels['clap'] = drum_vel
+                elif drum_note == DrumPatternGenerator.DRUMS['tom_high'] or \
+                     drum_note == DrumPatternGenerator.DRUMS['tom_mid'] or \
+                     drum_note == DrumPatternGenerator.DRUMS['tom_low']:
+                    drum_vels['tom'] = drum_vel
+                elif drum_note == DrumPatternGenerator.DRUMS['closed_hh']:
+                    drum_vels['closed_hh'] = drum_vel
+                elif drum_note == DrumPatternGenerator.DRUMS['open_hh']:
+                    drum_vels['open_hh'] = drum_vel
+
+            # Draw instrument rows
+            instruments = [
+                ('BASS', VisualFeedback.format_note_name(bass_note), bass_vel),
+                ('KICK', '', drum_vels['kick']),
+                ('SNARE', '', drum_vels['snare']),
+                ('CL-HH', '', drum_vels['closed_hh']),
+                ('OP-HH', '', drum_vels['open_hh']),
+                ('CLAP', '', drum_vels['clap']),
+                ('TOM', '', drum_vels['tom']),
+            ]
+
+            for idx, (name, note_name, velocity) in enumerate(instruments):
+                slider = self._draw_velocity_slider(velocity)
+                accent = "  ▲" if velocity > 110 else ""
+
+                if note_name:  # BASS has note name
+                    line = f"{name:6s} {note_name:4s} {slider}  {velocity:3d}/127{accent}"
+                else:  # Drums don't have note name
+                    line = f"{name:6s}      {slider}  {velocity:3d}/127{accent}"
+
+                self.stdscr.addstr(self.instrument_start_row + idx, 2,
+                                 line[:width].ljust(width), curses.color_pair(3))
+
             self.stdscr.refresh()
         except curses.error:
             pass
@@ -391,14 +498,10 @@ class AcidLooperCurses:
                 self.needs_full_redraw = True
             elif key == curses.KEY_UP:
                 self.tempo.increase()
-                # Update footer with new BPM
-                self.stdscr.addstr(self.status_row + 3, 0, f"BPM: {self.tempo.bpm:3d}  │  Patch: {patch['name']}", curses.color_pair(2))
-                self.stdscr.refresh()
+                # Tempo will be shown in footer, just trigger redraw on next loop
             elif key == curses.KEY_DOWN:
                 self.tempo.decrease()
-                # Update footer with new BPM
-                self.stdscr.addstr(self.status_row + 3, 0, f"BPM: {self.tempo.bpm:3d}  │  Patch: {patch['name']}", curses.color_pair(2))
-                self.stdscr.refresh()
+                # Tempo will be shown in footer, just trigger redraw on next loop
             elif key != -1:  # Some other key was pressed
                 char = chr(key).lower()
                 if char in PATCH_KEYS:
@@ -410,29 +513,13 @@ class AcidLooperCurses:
                         # Trigger immediate UI redraw to show yellow selection
                         self.needs_full_redraw = True
 
-            # Visual feedback
-            note_name = VisualFeedback.format_note_name(note)
-            progress_bar = VisualFeedback.draw_step_indicator(step_idx, total_steps)
-            note_viz = VisualFeedback.draw_note_visualizer(note, velocity)
-            accent_marker = "🔊" if velocity > 110 else "  "
-
-            drum_hits_info = ""
+            # Visual feedback - get current drum hits
+            drum_hits = []
             if step_idx < len(drum_pattern):
                 drum_hits, _ = drum_pattern[step_idx]
-                if drum_hits:
-                    drum_symbols = []
-                    for drum_note, drum_vel in drum_hits:
-                        if drum_note == DrumPatternGenerator.DRUMS['kick']:
-                            drum_symbols.append("K")
-                        elif drum_note == DrumPatternGenerator.DRUMS['snare']:
-                            drum_symbols.append("S")
-                        elif drum_note in [DrumPatternGenerator.DRUMS['closed_hh'],
-                                         DrumPatternGenerator.DRUMS['open_hh']]:
-                            drum_symbols.append("H")
-                    drum_hits_info = "".join(drum_symbols)
 
-            status_line = f"{progress_bar} │ {note_viz} │ {note_name:4s} v:{velocity:3d} {accent_marker} │ {drum_hits_info:3s}"
-            self.update_status_line(status_line)
+            # Update the Now Playing display
+            self.update_now_playing(note, velocity, drum_hits, step_idx, total_steps, bass_pattern)
 
             # Play drums
             if step_idx < len(drum_pattern):
