@@ -1,0 +1,9 @@
+{
+  "name": "Test Empty",
+  "description": "Empty test patch with no steps",
+  "root_note": 36,
+  "bass_pattern": [],
+  "drum_pattern": {
+    "steps": []
+  }
+}

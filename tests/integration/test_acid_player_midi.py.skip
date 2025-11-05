@@ -1,0 +1,503 @@
+"""
+Integration tests for AcidPlayer with mocked MIDI.
+
+Tests MIDI message sending, channel usage, and note on/off sequences
+without requiring actual hardware.
+"""
+import pytest
+import sys
+from pathlib import Path
+from unittest.mock import Mock, patch, MagicMock
+
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from acid_looper_curses import AcidPlayer
+from tests.conftest import (MockMIDIPort, assert_midi_message,
+                            assert_note_on_off_pair, MockMIDIMessage)
+
+
+class TestAcidPlayerInitialization:
+    """Test AcidPlayer initialization with mocked MIDI."""
+
+    @patch('acid_looper_curses.mido.open_output')
+    def test_initialization(self, mock_open_output):
+        """Test AcidPlayer initialization."""
+        mock_port = MockMIDIPort("Mock T-8")
+        mock_open_output.return_value = mock_port
+
+        player = AcidPlayer("Mock T-8")
+
+        assert player.outport == mock_port
+        assert player.bass_channel == 1
+        assert player.rhythm_channel == 9
+
+    @patch('acid_looper_curses.mido.open_output')
+    def test_initialization_opens_correct_port(self, mock_open_output):
+        """Test that initialization opens the correct MIDI port."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        player = AcidPlayer("Roland T-8")
+
+        mock_open_output.assert_called_once_with("Roland T-8")
+
+
+class TestBassNoteOn:
+    """Test bass note on functionality."""
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_bass_note_on_default_velocity(self, mock_message_class, mock_open_output):
+        """Test sending bass note on with default velocity."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        # Mock Message creation
+        mock_message = MockMIDIMessage('note_on', note=60, velocity=100, channel=1)
+        mock_message_class.return_value = mock_message
+
+        player = AcidPlayer("Mock T-8")
+        player.bass_note_on(60)
+
+        # Verify Message was created correctly
+        mock_message_class.assert_called_with(
+            'note_on',
+            channel=1,
+            note=60,
+            velocity=100
+        )
+
+        # Verify message was sent
+        assert mock_port.message_count == 1
+        assert_midi_message(mock_port.messages[0], 'note_on',
+                          note=60, velocity=100, channel=1)
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_bass_note_on_custom_velocity(self, mock_message_class, mock_open_output):
+        """Test sending bass note on with custom velocity."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        mock_message = MockMIDIMessage('note_on', note=48, velocity=75, channel=1)
+        mock_message_class.return_value = mock_message
+
+        player = AcidPlayer("Mock T-8")
+        player.bass_note_on(48, velocity=75)
+
+        mock_message_class.assert_called_with(
+            'note_on',
+            channel=1,
+            note=48,
+            velocity=75
+        )
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_bass_note_on_channel(self, mock_message_class, mock_open_output):
+        """Test that bass notes use channel 1."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        mock_message = MockMIDIMessage('note_on', note=60, velocity=100, channel=1)
+        mock_message_class.return_value = mock_message
+
+        player = AcidPlayer("Mock T-8")
+        player.bass_note_on(60)
+
+        # Verify channel 1 is used
+        mock_message_class.assert_called_with(
+            'note_on',
+            channel=1,
+            note=60,
+            velocity=100
+        )
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_bass_multiple_notes(self, mock_message_class, mock_open_output):
+        """Test sending multiple bass notes."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        player = AcidPlayer("Mock T-8")
+
+        # Send multiple notes
+        notes = [36, 40, 43, 48]
+        for note in notes:
+            mock_message = MockMIDIMessage('note_on', note=note, velocity=100, channel=1)
+            mock_message_class.return_value = mock_message
+            player.bass_note_on(note)
+
+        assert mock_port.message_count == 4
+
+
+class TestBassNoteOff:
+    """Test bass note off functionality."""
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_bass_note_off(self, mock_message_class, mock_open_output):
+        """Test sending bass note off."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        mock_message = MockMIDIMessage('note_off', note=60, channel=1)
+        mock_message_class.return_value = mock_message
+
+        player = AcidPlayer("Mock T-8")
+        player.bass_note_off(60)
+
+        mock_message_class.assert_called_with(
+            'note_off',
+            channel=1,
+            note=60
+        )
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_bass_note_off_channel(self, mock_message_class, mock_open_output):
+        """Test that bass note off uses channel 1."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        mock_message = MockMIDIMessage('note_off', note=60, channel=1)
+        mock_message_class.return_value = mock_message
+
+        player = AcidPlayer("Mock T-8")
+        player.bass_note_off(60)
+
+        # Verify channel 1
+        args = mock_message_class.call_args
+        assert args[1]['channel'] == 1
+
+
+class TestDrumNoteOn:
+    """Test drum note on functionality."""
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_drum_note_on_default_velocity(self, mock_message_class, mock_open_output):
+        """Test sending drum note on with default velocity."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        mock_message = MockMIDIMessage('note_on', note=36, velocity=100, channel=9)
+        mock_message_class.return_value = mock_message
+
+        player = AcidPlayer("Mock T-8")
+        player.drum_note_on(36)  # Kick drum
+
+        mock_message_class.assert_called_with(
+            'note_on',
+            channel=9,
+            note=36,
+            velocity=100
+        )
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_drum_note_on_custom_velocity(self, mock_message_class, mock_open_output):
+        """Test sending drum note on with custom velocity."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        mock_message = MockMIDIMessage('note_on', note=38, velocity=80, channel=9)
+        mock_message_class.return_value = mock_message
+
+        player = AcidPlayer("Mock T-8")
+        player.drum_note_on(38, velocity=80)  # Snare
+
+        mock_message_class.assert_called_with(
+            'note_on',
+            channel=9,
+            note=38,
+            velocity=80
+        )
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_drum_note_on_channel(self, mock_message_class, mock_open_output):
+        """Test that drum notes use channel 9."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        mock_message = MockMIDIMessage('note_on', note=42, velocity=100, channel=9)
+        mock_message_class.return_value = mock_message
+
+        player = AcidPlayer("Mock T-8")
+        player.drum_note_on(42)  # Closed hi-hat
+
+        # Verify channel 9
+        args = mock_message_class.call_args
+        assert args[1]['channel'] == 9
+
+
+class TestDrumNoteOff:
+    """Test drum note off functionality."""
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_drum_note_off(self, mock_message_class, mock_open_output):
+        """Test sending drum note off."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        mock_message = MockMIDIMessage('note_off', note=36, channel=9)
+        mock_message_class.return_value = mock_message
+
+        player = AcidPlayer("Mock T-8")
+        player.drum_note_off(36)
+
+        mock_message_class.assert_called_with(
+            'note_off',
+            channel=9,
+            note=36
+        )
+
+
+class TestChannelSeparation:
+    """Test that bass and drum use separate channels."""
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_bass_and_drum_different_channels(self, mock_message_class, mock_open_output):
+        """Test that bass and drum messages use different channels."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        player = AcidPlayer("Mock T-8")
+
+        # Send bass note
+        mock_message_class.return_value = MockMIDIMessage('note_on', note=60, velocity=100, channel=1)
+        player.bass_note_on(60)
+        bass_call = mock_message_class.call_args
+
+        # Send drum note
+        mock_message_class.return_value = MockMIDIMessage('note_on', note=36, velocity=100, channel=9)
+        player.drum_note_on(36)
+        drum_call = mock_message_class.call_args
+
+        # Verify different channels
+        assert bass_call[1]['channel'] == 1
+        assert drum_call[1]['channel'] == 9
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_simultaneous_bass_and_drum(self, mock_message_class, mock_open_output):
+        """Test sending bass and drum notes simultaneously."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        player = AcidPlayer("Mock T-8")
+
+        # Send bass and drum at same time
+        mock_message_class.return_value = MockMIDIMessage('note_on', note=48, velocity=100, channel=1)
+        player.bass_note_on(48)
+
+        mock_message_class.return_value = MockMIDIMessage('note_on', note=36, velocity=100, channel=9)
+        player.drum_note_on(36)
+
+        assert mock_port.message_count == 2
+
+
+class TestNoteSequences:
+    """Test note on/off sequences."""
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_bass_note_on_off_sequence(self, mock_message_class, mock_open_output):
+        """Test proper note on followed by note off for bass."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        player = AcidPlayer("Mock T-8")
+
+        # Send note on
+        mock_message_class.return_value = MockMIDIMessage('note_on', note=60, velocity=100, channel=1)
+        player.bass_note_on(60)
+
+        # Send note off
+        mock_message_class.return_value = MockMIDIMessage('note_off', note=60, channel=1)
+        player.bass_note_off(60)
+
+        assert mock_port.message_count == 2
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_drum_note_on_off_sequence(self, mock_message_class, mock_open_output):
+        """Test proper note on followed by note off for drums."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        player = AcidPlayer("Mock T-8")
+
+        # Send note on
+        mock_message_class.return_value = MockMIDIMessage('note_on', note=36, velocity=100, channel=9)
+        player.drum_note_on(36)
+
+        # Send note off
+        mock_message_class.return_value = MockMIDIMessage('note_off', note=36, channel=9)
+        player.drum_note_off(36)
+
+        assert mock_port.message_count == 2
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_multiple_note_sequence(self, mock_message_class, mock_open_output):
+        """Test sequence of multiple notes with on/off."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        player = AcidPlayer("Mock T-8")
+
+        notes = [60, 64, 67]
+        for note in notes:
+            # Note on
+            mock_message_class.return_value = MockMIDIMessage('note_on', note=note, velocity=100, channel=1)
+            player.bass_note_on(note)
+
+            # Note off
+            mock_message_class.return_value = MockMIDIMessage('note_off', note=note, channel=1)
+            player.bass_note_off(note)
+
+        # 3 notes * 2 messages each = 6 total
+        assert mock_port.message_count == 6
+
+
+class TestPortClosure:
+    """Test MIDI port closure."""
+
+    @patch('acid_looper_curses.mido.open_output')
+    def test_close_port(self, mock_open_output):
+        """Test closing MIDI port."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        player = AcidPlayer("Mock T-8")
+        assert not mock_port.is_closed
+
+        player.close()
+        assert mock_port.is_closed
+
+    @patch('acid_looper_curses.mido.open_output')
+    def test_send_after_close_raises_error(self, mock_open_output):
+        """Test that sending after close raises error."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        player = AcidPlayer("Mock T-8")
+        player.close()
+
+        # Trying to send after close should raise error
+        with pytest.raises(RuntimeError):
+            mock_message = MockMIDIMessage('note_on', note=60, velocity=100, channel=1)
+            mock_port.send(mock_message)
+
+
+class TestVelocityRanges:
+    """Test velocity value handling."""
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_minimum_velocity(self, mock_message_class, mock_open_output):
+        """Test sending note with minimum velocity (0)."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        mock_message = MockMIDIMessage('note_on', note=60, velocity=0, channel=1)
+        mock_message_class.return_value = mock_message
+
+        player = AcidPlayer("Mock T-8")
+        player.bass_note_on(60, velocity=0)
+
+        args = mock_message_class.call_args
+        assert args[1]['velocity'] == 0
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_maximum_velocity(self, mock_message_class, mock_open_output):
+        """Test sending note with maximum velocity (127)."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        mock_message = MockMIDIMessage('note_on', note=60, velocity=127, channel=1)
+        mock_message_class.return_value = mock_message
+
+        player = AcidPlayer("Mock T-8")
+        player.bass_note_on(60, velocity=127)
+
+        args = mock_message_class.call_args
+        assert args[1]['velocity'] == 127
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_various_velocities(self, mock_message_class, mock_open_output):
+        """Test sending notes with various velocity values."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        player = AcidPlayer("Mock T-8")
+
+        velocities = [0, 32, 64, 96, 127]
+        for vel in velocities:
+            mock_message = MockMIDIMessage('note_on', note=60, velocity=vel, channel=1)
+            mock_message_class.return_value = mock_message
+            player.bass_note_on(60, velocity=vel)
+
+        assert mock_port.message_count == 5
+
+
+class TestEdgeCases:
+    """Test edge cases and boundary conditions."""
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_note_zero(self, mock_message_class, mock_open_output):
+        """Test sending note 0 (lowest MIDI note)."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        mock_message = MockMIDIMessage('note_on', note=0, velocity=100, channel=1)
+        mock_message_class.return_value = mock_message
+
+        player = AcidPlayer("Mock T-8")
+        player.bass_note_on(0)
+
+        args = mock_message_class.call_args
+        assert args[1]['note'] == 0
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_note_127(self, mock_message_class, mock_open_output):
+        """Test sending note 127 (highest MIDI note)."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        mock_message = MockMIDIMessage('note_on', note=127, velocity=100, channel=1)
+        mock_message_class.return_value = mock_message
+
+        player = AcidPlayer("Mock T-8")
+        player.bass_note_on(127)
+
+        args = mock_message_class.call_args
+        assert args[1]['note'] == 127
+
+    @patch('acid_looper_curses.mido.open_output')
+    @patch('acid_looper_curses.mido.Message')
+    def test_rapid_note_sending(self, mock_message_class, mock_open_output):
+        """Test sending many notes rapidly."""
+        mock_port = MockMIDIPort()
+        mock_open_output.return_value = mock_port
+
+        player = AcidPlayer("Mock T-8")
+
+        # Send 100 notes rapidly
+        for i in range(100):
+            note = 60 + (i % 12)  # Cycle through octave
+            mock_message = MockMIDIMessage('note_on', note=note, velocity=100, channel=1)
+            mock_message_class.return_value = mock_message
+            player.bass_note_on(note)
+
+        assert mock_port.message_count == 100
