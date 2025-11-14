@@ -37,10 +37,10 @@ class TestDrumMapping:
         assert drums['snare'] == 38
         assert drums['closed_hh'] == 42
         assert drums['open_hh'] == 46
-        assert drums['tom_high'] == 50
+        assert drums['tom_high'] == 47
         assert drums['tom_mid'] == 47
         assert drums['tom_low'] == 45
-        assert drums['clap'] == 39
+        assert drums['clap'] == 50  # T-8 Manual: HAND CLAP Tx=50
 
     def test_drum_notes_valid_midi_range(self):
         """Test that all drum notes are in valid MIDI range (0-127)."""
@@ -49,8 +49,23 @@ class TestDrumMapping:
 
     def test_drum_notes_unique(self):
         """Test that each drum has a unique note number."""
+        # Note: T-8 uses same note (47) for tom_high and tom_mid
+        # This is correct per the T-8 manual (TOM responds to 45, 47)
         notes = list(DrumPatternGenerator.DRUMS.values())
-        assert len(notes) == len(set(notes)), "Duplicate drum note numbers found"
+        # Allow tom_high and tom_mid to share note 47
+        unique_drums = {k: v for k, v in DrumPatternGenerator.DRUMS.items() 
+                       if k not in ['tom_high', 'tom_mid']}
+        tom_notes = [DrumPatternGenerator.DRUMS['tom_high'], 
+                    DrumPatternGenerator.DRUMS['tom_mid']]
+        
+        # Check non-tom drums are unique
+        non_tom_notes = list(unique_drums.values())
+        assert len(non_tom_notes) == len(set(non_tom_notes)), \
+            "Duplicate drum note numbers found (excluding toms)"
+        
+        # Check toms use valid T-8 tom notes (45 or 47)
+        for tom_note in tom_notes:
+            assert tom_note in [45, 47], f"Tom note {tom_note} not valid (should be 45 or 47)"
 
 
 class TestElaborateTechDrumsPattern:

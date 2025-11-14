@@ -1,0 +1,26 @@
+{
+  "name": "Test 4: Closed HH Only",
+  "description": "2 bars, closed hi-hat only",
+  "bass_pattern": [
+    [36, 0, "test_1"],
+    [36, 0, "test_2"],
+    [36, 0, "test_3"],
+    [36, 0, "test_4"],
+    [36, 0, "test_5"],
+    [36, 0, "test_6"],
+    [36, 0, "test_7"],
+    [36, 0, "test_8"]
+  ],
+  "drum_pattern": {
+    "steps": [
+      [[42, 75]],
+      [[42, 65]],
+      [[42, 75]],
+      [[42, 65]],
+      [[42, 75]],
+      [[42, 65]],
+      [[42, 75]],
+      [[42, 65]]
+    ]
+  }
+}

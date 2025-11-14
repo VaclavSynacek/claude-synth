@@ -97,14 +97,14 @@ class VisualFeedback:
 class DrumPatternGenerator:
     """Generate drum patterns"""
     DRUMS = {
-        'kick': 36,
-        'snare': 38,
-        'closed_hh': 42,
-        'open_hh': 46,
-        'tom_high': 50,
-        'tom_mid': 47,
-        'tom_low': 45,
-        'clap': 39,
+        'kick': 36,      # T-8 Manual: Tx=36, Rx=35,36
+        'snare': 38,     # T-8 Manual: Tx=38, Rx=38,40
+        'closed_hh': 42, # T-8 Manual: Tx=42, Rx=42,44
+        'open_hh': 46,   # T-8 Manual: Tx=46, Rx=46
+        'tom_high': 47,  # T-8 Manual: TOM Tx=47, Rx=45,47
+        'tom_mid': 47,   # T-8 Manual: TOM Tx=47, Rx=45,47
+        'tom_low': 45,   # T-8 Manual: TOM Rx=45,47
+        'clap': 50,      # T-8 Manual: HAND CLAP Tx=50, Rx=48,50
     }
 
     @staticmethod

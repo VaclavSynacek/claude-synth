@@ -177,6 +177,7 @@ See [TESTING_STRATEGY.md](TESTING_STRATEGY.md) for detailed strategy.
 - [README_LOOPER.md](README_LOOPER.md) - Original user guide
 - [TESTING.md](TESTING.md) - Comprehensive testing guide
 - [TESTING_STRATEGY.md](TESTING_STRATEGY.md) - Testing strategy and design
+- [T8_MIDI_MAPPING.md](T8_MIDI_MAPPING.md) - Official T-8 MIDI note mapping
 - [CLAUDE.md](CLAUDE.md) - Development guidelines
 
 ## License

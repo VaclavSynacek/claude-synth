@@ -1,0 +1,26 @@
+{
+  "name": "Test 1: Bass Only",
+  "description": "2 bars, bass only",
+  "bass_pattern": [
+    [36, 100, "test_1"],
+    [38, 90, "test_2"],
+    [40, 100, "test_3"],
+    [42, 90, "test_4"],
+    [43, 100, "test_5"],
+    [45, 90, "test_6"],
+    [47, 100, "test_7"],
+    [48, 90, "test_8"]
+  ],
+  "drum_pattern": {
+    "steps": [
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  }
+}

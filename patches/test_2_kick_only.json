@@ -1,0 +1,26 @@
+{
+  "name": "Test 2: Kick Only",
+  "description": "2 bars, kick only",
+  "bass_pattern": [
+    [36, 0, "test_1"],
+    [36, 0, "test_2"],
+    [36, 0, "test_3"],
+    [36, 0, "test_4"],
+    [36, 0, "test_5"],
+    [36, 0, "test_6"],
+    [36, 0, "test_7"],
+    [36, 0, "test_8"]
+  ],
+  "drum_pattern": {
+    "steps": [
+      [[36, 120]],
+      [],
+      [[36, 110]],
+      [],
+      [[36, 120]],
+      [],
+      [[36, 115]],
+      []
+    ]
+  }
+}
