@@ -10,7 +10,6 @@ This project includes a comprehensive test suite that enables development and CI
 - **Unit Tests**: 123 (83%)
 - **Integration Tests**: 25 (17%)
 - **Success Rate**: 100%
-- **Code Coverage**: 38% (focused on business logic)
 
 ## Test Structure
 
@@ -46,7 +45,7 @@ tests/
 # Run only integration tests
 ./run_tests.sh integration
 
-# Quick run without coverage
+# Quick run
 ./run_tests.sh quick
 ```
 
@@ -60,9 +59,6 @@ uv pip install mido python-rtmidi pytest pytest-cov pytest-mock pytest-timeout f
 
 # Run all tests
 pytest tests/ -v
-
-# Run with coverage
-pytest tests/ --cov=. --cov-report=html --cov-report=term
 
 # Run specific test file
 pytest tests/unit/test_tempo_controller.py -v
@@ -86,7 +82,7 @@ Unit tests verify isolated component functionality without external dependencies
 - Tempo increase/decrease functionality
 - Mathematical accuracy of timing formulas
 
-**Coverage**: 100% of TempoController class
+**Testing**: Complete validation of TempoController class
 
 #### VisualFeedback (48 tests)
 - Note-to-name conversion (MIDI note → "C4" format)
@@ -94,7 +90,7 @@ Unit tests verify isolated component functionality without external dependencies
 - Step progress indicators with percentage
 - Edge cases (notes outside range, zero steps, etc.)
 
-**Coverage**: 100% of VisualFeedback class
+**Testing**: Complete validation of VisualFeedback class
 
 #### DrumPatternGenerator (23 tests)
 - 64-step drum pattern generation
@@ -102,7 +98,7 @@ Unit tests verify isolated component functionality without external dependencies
 - Drum note mapping validation
 - Pattern structure and consistency
 
-**Coverage**: 100% of DrumPatternGenerator class
+**Testing**: Complete validation of DrumPatternGenerator class
 
 #### PatchLoader (27 tests)
 - JSON file parsing and validation
@@ -110,7 +106,7 @@ Unit tests verify isolated component functionality without external dependencies
 - Keyboard key mapping (q-m → patches)
 - Error handling for malformed files
 
-**Coverage**: ~95% of PatchLoader class
+**Testing**: Comprehensive validation of PatchLoader class
 
 ### Integration Tests (25 tests)
 
@@ -122,7 +118,7 @@ Integration tests verify interactions between components.
 - Port management and cleanup
 - Typical usage scenarios
 
-**Coverage**: Basic functionality verified with mocks
+**Testing**: Basic functionality verified with mocks
 
 #### Visualization & Patches (13 tests)
 - Visualization accuracy with real patch data
@@ -130,7 +126,7 @@ Integration tests verify interactions between components.
 - Tempo controller with pattern playback
 - End-to-end workflow simulation
 
-**Coverage**: Integration paths verified
+**Testing**: Integration paths verified
 
 ## Mock Infrastructure
 
@@ -225,7 +221,6 @@ Replaces `mido` library for testing:
 The `.github/workflows/test.yml` workflow runs automatically on:
 - Every push to any branch
 - Every pull request to main/master
-- Nightly at 2 AM UTC
 
 **Test Matrix**:
 - Python versions: 3.8, 3.9, 3.10, 3.11, 3.12
@@ -236,9 +231,6 @@ The `.github/workflows/test.yml` workflow runs automatically on:
 2. Create virtual environment
 3. Install dependencies
 4. Run full test suite
-5. Generate coverage report
-6. Upload coverage to Codecov
-7. Fail if coverage < 70%
 
 ### CI/CD Requirements
 
@@ -336,14 +328,6 @@ source .venv/bin/activate
 uv pip install mido python-rtmidi
 ```
 
-### Coverage Too Low
-
-If coverage drops below acceptable levels:
-1. Identify uncovered lines: `pytest --cov=. --cov-report=term-missing`
-2. View HTML report: `xdg-open htmlcov/index.html`
-3. Add tests for critical uncovered code
-4. Update coverage threshold if justified
-
 ### Tests Timeout
 
 If tests take too long:
@@ -387,9 +371,8 @@ When contributing tests:
 
 1. **Run Full Suite**: Ensure all tests pass before committing
 2. **Add Tests for Bugs**: Every bug fix should include a test
-3. **Maintain Coverage**: Don't decrease overall coverage
-4. **Update Documentation**: Add new test categories to this guide
-5. **Follow Style**: Match existing test structure and naming
+3. **Update Documentation**: Add new test categories to this guide
+4. **Follow Style**: Match existing test structure and naming
 
 ## Resources
 

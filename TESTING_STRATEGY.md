@@ -29,7 +29,7 @@ This document outlines the comprehensive testing strategy for the AI Augmented G
 
 ### 2. Test Categories
 
-#### Unit Tests (Target: 70% coverage)
+#### Unit Tests
 Tests for isolated components with no external dependencies:
 
 - **TempoController**
@@ -55,7 +55,7 @@ Tests for isolated components with no external dependencies:
   - File timestamp tracking
   - Patch-to-key mapping (q-m)
 
-#### Integration Tests (Target: 20% coverage)
+#### Integration Tests
 Tests for component interactions:
 
 - **AcidPlayer + MockMIDI**
@@ -82,7 +82,7 @@ Tests for component interactions:
   - Instrument activity indicators
   - Current vs queued patch markers
 
-#### End-to-End Tests (Target: 10% coverage)
+#### End-to-End Tests
 Simulated full application workflows:
 
 - **Complete Playback Cycle**
@@ -132,7 +132,6 @@ Simulated full application workflows:
 1. Install pytest and testing dependencies
 2. Create test directory structure
 3. Set up pytest configuration
-4. Configure code coverage reporting
 
 ### Phase 2: Mock Development
 1. Implement MockMIDIPort
@@ -154,9 +153,8 @@ Simulated full application workflows:
 
 ### Phase 5: CI/CD Integration
 1. Create GitHub Actions workflow
-2. Add coverage reporting
-3. Configure test requirements
-4. Add badge to README
+2. Configure test requirements
+3. Add badge to README
 
 ### Phase 6: Documentation
 1. Write test running guide
@@ -166,7 +164,6 @@ Simulated full application workflows:
 ## Success Criteria
 
 - ✅ All tests pass without physical Roland T-8
-- ✅ Code coverage ≥ 80%
 - ✅ Tests run in CI/CD pipeline
 - ✅ Patch switching verified without artifacts
 - ✅ Visualization accuracy validated
@@ -179,9 +176,6 @@ Simulated full application workflows:
 ```bash
 # Run all tests
 uv run pytest
-
-# Run with coverage
-uv run pytest --cov=. --cov-report=html
 
 # Run specific test category
 uv run pytest tests/unit/
@@ -199,11 +193,9 @@ uv run pytest --durations=10
 Tests will run automatically on:
 - Every push to feature branches
 - Every pull request
-- Scheduled nightly builds
 
 Pipeline will fail if:
 - Any test fails
-- Coverage drops below 80%
 - Performance regression detected
 
 ## Maintenance

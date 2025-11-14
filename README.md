@@ -61,7 +61,6 @@ This project includes a comprehensive test harness that enables development with
 - **Unit Tests**: 123 tests covering business logic
 - **Integration Tests**: 25 tests covering component interactions
 - **Execution Time**: < 1 second
-- **Code Coverage**: 38% (focused on testable business logic)
 
 ### Running Tests
 
@@ -77,9 +76,6 @@ This project includes a comprehensive test harness that enables development with
 
 # Run only integration tests
 ./run_tests.sh integration
-
-# Generate coverage report
-pytest --cov=. --cov-report=html
 ```
 
 ### What's Tested
@@ -105,7 +101,6 @@ See [TESTING.md](TESTING.md) for complete testing documentation.
 Tests run automatically on:
 - Every push to any branch
 - Pull requests to main/master
-- Nightly schedule (2 AM UTC)
 
 GitHub Actions workflow tests against Python 3.8, 3.9, 3.10, 3.11, and 3.12.
 
@@ -207,7 +202,7 @@ The testing strategy focuses on:
 2. **Mock Infrastructure**: MockMIDIPort simulates MIDI device
 3. **Fast Feedback**: Tests complete in under 1 second
 4. **CI/CD Ready**: Automated testing on every commit
-5. **Business Logic Coverage**: Core components thoroughly tested
+5. **Business Logic Testing**: Core components thoroughly tested
 
 See [TESTING_STRATEGY.md](TESTING_STRATEGY.md) for detailed strategy.
 
@@ -223,8 +218,7 @@ See [TESTING_STRATEGY.md](TESTING_STRATEGY.md) for detailed strategy.
 
 1. Write tests for new features
 2. Ensure all tests pass: `./run_tests.sh`
-3. Maintain or improve code coverage
-4. Update documentation
+3. Update documentation
 
 ## Documentation
 
