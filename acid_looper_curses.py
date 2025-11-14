@@ -649,7 +649,31 @@ def main_curses(stdscr, player, patch_loader):
 
 def main():
     try:
-        print("\n[INFO] Searching for Roland T-8 MIDI port...\n")
+        # Get patches directory from command line argument, default to 'patches'
+        patches_dir = sys.argv[1] if len(sys.argv) > 1 else "patches"
+        
+        print(f"\n[INFO] Patches directory: {patches_dir}")
+        
+        # Check if directory exists
+        patches_path = Path(patches_dir)
+        if not patches_path.exists():
+            print(f"[ERROR] Directory '{patches_dir}' does not exist!")
+            print("\n[INFO] Available patch directories:")
+            for d in sorted(Path('.').glob('*patches*')):
+                if d.is_dir():
+                    json_count = len(list(d.glob('*.json')))
+                    print(f"      - {d.name} ({json_count} patches)")
+            sys.exit(1)
+        
+        # Count patches
+        json_files = list(patches_path.glob('*.json'))
+        print(f"[INFO] Found {len(json_files)} patch file(s)\n")
+        
+        if len(json_files) == 0:
+            print(f"[WARNING] No .json patch files found in '{patches_dir}'")
+            sys.exit(1)
+        
+        print("[INFO] Searching for Roland T-8 MIDI port...\n")
         t8_port = None
         for port in mido.get_output_names():
             if "T-8" in port:
@@ -665,7 +689,7 @@ def main():
             sys.exit(1)
 
         player = AcidPlayer(t8_port)
-        patch_loader = PatchLoader("patches")
+        patch_loader = PatchLoader(patches_dir)
 
         print("[INFO] Starting looper in curses mode...\n")
         time.sleep(1)

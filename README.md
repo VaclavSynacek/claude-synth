@@ -14,8 +14,12 @@ An AI-augmented generative sequencer for Roland T-8 with MIDI sequencing, hot-re
 ## Quick Start
 
 ```bash
-# Run the looper
+# Run the looper (uses default 'patches' directory - symlink to swing-patches)
 ./run_looper.sh
+
+# Run with specific patch collection
+./run_looper.sh swing-patches    # Electro swing patches
+./run_looper.sh test-patches     # Test patches (simple patterns)
 
 # Run tests
 ./run_tests.sh
@@ -26,15 +30,21 @@ An AI-augmented generative sequencer for Roland T-8 with MIDI sequencing, hot-re
 ```
 claude-synth/
 ├── acid_looper_curses.py      # Main application
-├── patches/                   # Patch JSON files
-│   ├── deep_acid.json
-│   ├── melodic_techno.json
+├── patches -> swing-patches/  # Symlink to default patch collection
+├── swing-patches/             # Electro swing patch collection (8 patches)
+│   ├── 01_intro.json
+│   ├── 02_verse.json
+│   ├── ...
+│   └── PATCH_GUIDE.md        # Performance guide for swing patches
+├── test-patches/              # Simple test patches (7 patches)
+│   ├── test_1_bass_only.json
+│   ├── test_2_kick_only.json
 │   └── ...
 ├── tests/                     # Comprehensive test suite
 │   ├── unit/                  # Unit tests (123 tests)
 │   ├── integration/           # Integration tests (25 tests)
 │   └── fixtures/              # Test data
-├── run_looper.sh             # Launch script
+├── run_looper.sh             # Launch script (accepts patch directory)
 ├── run_tests.sh              # Test runner
 ├── TESTING.md                # Testing documentation
 ├── TESTING_STRATEGY.md       # Test strategy and design
@@ -98,6 +108,50 @@ Tests run automatically on:
 - Nightly schedule (2 AM UTC)
 
 GitHub Actions workflow tests against Python 3.8, 3.9, 3.10, 3.11, and 3.12.
+
+## Patch Collections
+
+The looper now supports multiple patch collections organized in separate directories:
+
+### Using Patch Collections
+
+```bash
+# Default collection (swing-patches via symlink)
+./run_looper.sh
+
+# Explicit collection selection
+./run_looper.sh swing-patches
+./run_looper.sh test-patches
+
+# Direct Python invocation
+python3 acid_looper_curses.py swing-patches
+```
+
+### Creating Your Own Collections
+
+1. Create a new directory (e.g., `techno-patches/`, `ambient-patches/`)
+2. Add your patch JSON files to that directory
+3. Run with: `./run_looper.sh your-directory-name`
+
+**Example:**
+```bash
+mkdir house-patches
+# Add your patch files...
+./run_looper.sh house-patches
+```
+
+### Current Collections
+
+- **swing-patches/** (8 patches) - Electro swing inspired by Parov Stelar
+  - True swing timing (0.66 ratio)
+  - Dual-role bass (foundation + melody)
+  - Complex polyrhythmic drums
+  - See `swing-patches/PATCH_GUIDE.md` for details
+
+- **test-patches/** (7 patches) - Simple test patterns
+  - Individual instrument isolation
+  - Useful for testing MIDI routing
+  - See `test-patches/README.md` for details
 
 ## Controls
 
