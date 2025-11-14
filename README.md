@@ -230,4 +230,4 @@ See [TESTING_STRATEGY.md](TESTING_STRATEGY.md) for detailed strategy.
 
 ## License
 
-Open source project for Roland T-8 enthusiasts.
+MIT License - see [LICENSE](LICENSE) file for details.
