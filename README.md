@@ -1,6 +1,6 @@
-# Roland T-8 Acid Looper
+# AI Augmented Generative Sequencer for Roland T-8
 
-A dynamic Roland T-8 acid bassline looper with MIDI sequencing, hot-reload patch management, and comprehensive testing.
+An AI-augmented generative sequencer for Roland T-8 with MIDI sequencing, hot-reload patch management, and comprehensive testing.
 
 ## Features
 
@@ -113,7 +113,7 @@ Create JSON files in `patches/` directory:
 ```json
 {
   "name": "My Acid Pattern",
-  "description": "A cool acid bassline",
+  "description": "An AI-generated pattern",
   "root_note": 36,
   "bass_pattern": [
     [36, 100, "C"],

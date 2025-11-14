@@ -1,7 +1,7 @@
-# Testing Strategy for Roland T-8 Acid Looper
+# Testing Strategy for AI Augmented Generative Sequencer for Roland T-8
 
 ## Overview
-This document outlines the comprehensive testing strategy for the Roland T-8 Acid Looper application, designed to enable automated testing in CI/CD environments without requiring physical hardware.
+This document outlines the comprehensive testing strategy for the AI Augmented Generative Sequencer for Roland T-8 application, designed to enable automated testing in CI/CD environments without requiring physical hardware.
 
 ## Testing Goals
 

@@ -1,17 +1,26 @@
 #!/bin/bash
-# Launch the acid looper in a new terminal window
+# Launch the AI Augmented Generative Sequencer in a new terminal window
 
-cd /home/jajis/projects/claude-synth
-
+clear
 echo "╔════════════════════════════════════════════════════════════════════════════════╗"
-echo "║                    Launching Acid Looper (Curses Edition)...                  ║"
+echo "║                                                                                ║"
+echo "║         Launching AI Augmented Generative Sequencer for Roland T-8...         ║"
+echo "║                                                                                ║"
 echo "╚════════════════════════════════════════════════════════════════════════════════╝"
 echo ""
-echo "[INFO] Activating virtual environment..."
 
-source .venv/bin/activate
+# Check if uv is installed
+if ! command -v uv &> /dev/null; then
+    echo "Error: 'uv' is not installed. Please install it first."
+    echo "Visit: https://github.com/astral-sh/uv"
+    exit 1
+fi
 
-echo "[INFO] Starting acid_looper_curses.py..."
-echo ""
+# Activate virtual environment if it exists
+if [ -d ".venv" ]; then
+    source .venv/bin/activate
+fi
 
+# Run the looper
 python3 acid_looper_curses.py
+

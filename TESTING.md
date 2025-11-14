@@ -1,4 +1,4 @@
-# Testing Guide for Roland T-8 Acid Looper
+# Testing Guide for AI Augmented Generative Sequencer for Roland T-8
 
 ## Overview
 

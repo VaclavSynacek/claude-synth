@@ -1,11 +1,11 @@
 #!/bin/bash
-# Test runner script for Roland T-8 Acid Looper
+# Test runner script for AI Augmented Generative Sequencer for Roland T-8
 # This script runs the full test suite with coverage reporting
 
 set -e  # Exit on error
 
 echo "=========================================="
-echo "Roland T-8 Acid Looper - Test Suite"
+echo "AI Augmented Generative Sequencer for Roland T-8 - Test Suite"
 echo "=========================================="
 echo ""
 

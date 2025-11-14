@@ -1,1 +1,1 @@
-"""Tests for Roland T-8 Acid Looper."""
+"""Tests for AI Augmented Generative Sequencer for Roland T-8."""

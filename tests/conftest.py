@@ -1,5 +1,5 @@
 """
-Pytest configuration and shared fixtures for Roland T-8 Acid Looper tests.
+Pytest configuration and shared fixtures for AI Augmented Generative Sequencer for Roland T-8 tests.
 """
 import json
 import os

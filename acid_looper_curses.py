@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Acid Bassline Looper for Roland T-8 - Curses Edition
+AI Augmented Generative Sequencer for Roland T-8
 Features:
 - Dynamic patch loading from JSON files
 - Keyboard mapping (qwertyuiopasdfghjklzxcvbnm)
@@ -279,7 +279,7 @@ class AcidLooperCurses:
             row = 0
 
             # Header
-            header_text = "ROLAND T-8 ACID LOOPER - DYNAMIC EDITION"
+            header_text = "AI AUGMENTED GENERATIVE SEQUENCER FOR ROLAND T-8"
             padding = (width - len(header_text) - 2) // 2
             self.stdscr.addstr(row, 0, "╔" + "═" * (width - 2) + "╗", curses.color_pair(1) | curses.A_BOLD)
             row += 1
@@ -645,7 +645,7 @@ def main():
     finally:
         if 'player' in locals():
             player.close()
-        print("\n✨ Acid looper stopped!\n")
+        print("\n✨ AI augmented sequencer stopped!\n")
 
 
 if __name__ == "__main__":
