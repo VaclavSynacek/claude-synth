@@ -225,7 +225,7 @@ class PatchLoader:
 
 
 class TempoController:
-    """Control tempo with up/down arrow keys"""
+    """Control tempo with up/down arrow keys and swing timing"""
     def __init__(self, initial_bpm=90):
         self.bpm = initial_bpm
         self.min_bpm = 60
@@ -238,9 +238,44 @@ class TempoController:
     def decrease(self):
         self.bpm = max(self.bpm - self.step, self.min_bpm)
 
-    def get_step_duration_ms(self):
-        """Get step duration in milliseconds (16th notes)"""
-        return (60000 / self.bpm) / 4
+    def get_step_duration_ms(self, step_index=0, swing_ratio=0.0):
+        """
+        Get step duration in milliseconds with swing support
+        
+        Args:
+            step_index: Current step number (0-15)
+            swing_ratio: 0.0 = straight, 0.66 = triplet swing, 1.0 = extreme swing
+        
+        Swing works by making pairs of 16th notes uneven:
+        - First note of pair (even index): SHORT wait before playing
+        - Second note of pair (odd index): LONG wait before playing
+        
+        For triplet swing (0.66): 
+        - Pair should be in 2:1 ratio (like triplet: eighth-note + sixteenth)
+        - Short = 2/3 of two-note pair duration
+        - Long = 4/3 of two-note pair duration
+        """
+        base_duration = (60000 / self.bpm) / 4  # 16th note in ms
+        
+        if swing_ratio == 0.0:
+            return base_duration
+        
+        # Total time for a pair of notes (2 sixteenths)
+        pair_duration = base_duration * 2
+        
+        # For swing_ratio 0.66 (triplet swing):
+        # We want first note at 0% and second note at 66.6% of the pair
+        # This creates the triplet feel: | . . | . . |
+        #                                 1   2   1   2
+        
+        if step_index % 2 == 0:
+            # Even step: First of the pair - comes EARLY
+            # Duration = swing_ratio * pair_duration
+            return pair_duration * (1.0 - swing_ratio)
+        else:
+            # Odd step: Second of the pair - comes LATE  
+            # Duration = (1 - swing_ratio) * pair_duration
+            return pair_duration * swing_ratio
 
 
 class AcidLooperCurses:
@@ -492,6 +527,7 @@ class AcidLooperCurses:
         """Play one complete loop of the pattern"""
         bass_pattern = patch['bass_pattern']
         drum_pattern = patch['drum_pattern']
+        swing_ratio = patch.get('swing_ratio', 0.0)  # Default to 0.0 (straight) if not specified
         total_steps = len(bass_pattern)
 
         for step_idx, (note, velocity, label) in enumerate(bass_pattern):
@@ -544,7 +580,7 @@ class AcidLooperCurses:
 
             # Play bass
             self.player.bass_note_on(note, velocity)
-            time.sleep(self.tempo.get_step_duration_ms() / 1000)
+            time.sleep(self.tempo.get_step_duration_ms(step_idx, swing_ratio) / 1000)
 
             # Stop notes
             self.player.bass_note_off(note)
