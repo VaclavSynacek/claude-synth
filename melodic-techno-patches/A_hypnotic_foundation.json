@@ -1,0 +1,46 @@
+{
+  "name": "A - Hypnotic Foundation",
+  "description": "32 bars melodic techno - driving bass with ethereal high melody",
+  "bpm": 128,
+  "swing_ratio": 0.0,
+  "bars": 32,
+  "root_note": 33,
+  "bass_pattern": [
+    [33, 100, "A_bass_on"],
+    [57, 75, "A_lead_high_off"],
+    [33, 95, "A_bass_on"],
+    [60, 70, "C_lead_high_off"],
+    [33, 100, "A_bass_on"],
+    [62, 75, "D_lead_high_off"],
+    [33, 95, "A_bass_on"],
+    [60, 70, "C_lead_high_off"],
+    [33, 100, "A_bass_on"],
+    [57, 80, "A_lead_high_off"],
+    [33, 95, "A_bass_on"],
+    [62, 75, "D_lead_high_off"],
+    [36, 100, "C_bass_on"],
+    [64, 80, "E_lead_high_off"],
+    [36, 95, "C_bass_on"],
+    [60, 75, "C_lead_high_off"]
+  ],
+  "drum_pattern": {
+    "steps": [
+      [[36, 100]],
+      [[42, 55]],
+      [[42, 60]],
+      [[42, 50]],
+      [[38, 95], [42, 55]],
+      [[42, 50]],
+      [[42, 60]],
+      [[42, 55]],
+      [[36, 100]],
+      [[42, 55]],
+      [[42, 60]],
+      [[42, 50]],
+      [[38, 95], [42, 55]],
+      [[42, 50]],
+      [[42, 60], [50, 65]],
+      [[42, 55]]
+    ]
+  }
+}
